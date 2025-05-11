@@ -53,29 +53,6 @@ export function InvitationPreview() {
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const [isLoading, setIsLoading] = useState(true)
 
-  // Fungsi untuk memuat Google Maps API
-  const loadGoogleMapsAPI = () => {
-    const existingScript = document.querySelector('script[src="mapsJavaScriptAPI.js"]');
-    if (!existingScript) {
-      const script = document.createElement('script');
-      script.src = 'mapsJavaScriptAPI.js'; // Pastikan path ini benar
-      script.async = true;
-      script.defer = true;
-      script.onload = () => {
-        if (window.initMap) {
-          window.initMap();
-        }
-      };
-      document.head.appendChild(script);
-    } else if (window.initMap) {
-      window.initMap();
-    }
-  };
-
-  useEffect(() => {
-    loadGoogleMapsAPI();
-  }, []);
-
   // Helper function to safely handle image URLs
   const safeImageUrl = (url: string) => {
     if (!url) return ""
@@ -982,66 +959,10 @@ img.error::after {
     `;
   };
 
-    const generateJS1 = () => {
-      return `
-      // Fungsi untuk menginisialisasi peta
-      function initMap() {
-          // Tentukan lokasi default
-          const defaultLocation = "${eventAddress || eventLocation || ""}".replace(/'/g, "\\'");
-  
-          // Dapatkan elemen input lokasi
-          const locationInput = document.getElementById('locationInput');
-  
-          // Jika elemen input lokasi ditemukan
-          if (locationInput) {
-              // Isi input lokasi dengan lokasi default
-              locationInput.value = defaultLocation;
-  
-              // Panggil updateMap untuk menampilkan peta dengan lokasi default
-              updateMap();
-          } else {
-              console.error("Elemen dengan ID 'locationInput' tidak ditemukan.");
-          }
-  
-          // Tambahkan event listener untuk tombol pencarian (jika ada)
-          const searchButton = document.getElementById('search');
-          if (searchButton) {
-              searchButton.addEventListener('click', function () {
-                  updateMap(); // Panggil updateMap saat tombol pencarian diklik
-              });
-          } else {
-              console.warn("Elemen dengan ID 'search' tidak ditemukan.");
-          }
-      }
-  
-      // Fungsi untuk memperbarui peta berdasarkan input lokasi
-      function updateMap() {
-          const locationInput = document.getElementById("locationInput");
-          const iframe = document.getElementById("map1");
-          const apiKey = "AIzaSyDvxxKvshRHZOnEaUGb_V9t3aIjOUVIDWw"; // Ganti dengan kunci API Anda
-  
-          // Pastikan elemen input dan iframe ditemukan
-          if (locationInput && iframe) {
-              const location = locationInput.value.trim();
-              if (location) {
-                  // EncodeURIComponent penting untuk menangani spasi dan karakter khusus dalam URL
-                  iframe.src = \`https://www.google.com/maps/embed/v1/place?key=\${apiKey}&q=\${encodeURIComponent(location)}\`;
-              } else {
-                  console.warn("Input lokasi kosong. Harap masukkan lokasi.");
-              }
-          } else {
-              // Pesan kesalahan jika elemen tidak ditemukan
-              console.error("Elemen dengan ID 'locationInput' atau 'map1' tidak ditemukan.");
-          }
-      }
-  
-      // Panggil initMap saat halaman selesai dimuat
-      window.onload = initMap;
-      `
-  }
-  
+ 
   // Function to generate HTML file content
   const generateHTML = (): string => {
+   const safeEmbedUrl = mapLocation ? mapLocation.toString().replace(/'/g, "\\'") : ""
     const formattedDate = eventDate
       ? new Date(eventDate).toLocaleDateString("en-US", {
           weekday: "long",
@@ -1059,10 +980,6 @@ img.error::after {
         })
       : "";
         
-      const safeMapLocation = mapLocation ? mapLocation.toString().replace(/'/g, "\\'") : "";
-      const safeEventLocation = eventLocation ? eventLocation.toString().replace(/'/g, "\\'") : "Event Location";
-      const safeEventAddress = eventAddress ? eventAddress.toString().replace(/'/g, "\\'") : "Event Address";
-      
       // Get color gradient based on selected theme
       const getColorGradient = () => {
         switch (colorTheme) {
@@ -1098,8 +1015,8 @@ img.error::after {
     const effectiveBackgroundImage = getEffectiveBackgroundImage()
     const safeBackgroundImage = effectiveBackgroundImage ? safeImageUrl(effectiveBackgroundImage) : ""
 
-      // Generate HTML content
-      const htmlContent = `
+    // Generate HTML content
+    const htmlContent = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1773,8 +1690,6 @@ img.error::after {
       }
     });
   </script>
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbVKartNGg&callback=initMap" async defer></script>
-  <script src="mapsJavaScriptAPI.js" async defer></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   </head>
 <body>
@@ -1923,75 +1838,20 @@ img.error::after {
       mapLocation
         ? `
     <div class="section ${enableEffects && enableRgbEffects ? "rgb-border" : ""}">
-      <h2 class="section-title">Location</h2>
-      <div class="map-container" id="map"></div>
-    <input className="grid gap-2 border p-3 rounded-md" type="text" id="location-input" placeholder="address location places..." />
-    <button id="search-btn" className="grid gap-2 border p-3 rounded-md">On Click, get location</button>
+      <div class="map-container">
+        <iframe
+          src="${safeEmbedUrl}"
+          width="100%"
+          height="100%"
+          style="border:0;"
+          allowfullscreen=""
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+        ></iframe>
+      </div>
     </div>
-    <script>
-      var map;
-      var marker; // Variabel untuk menyimpan marker global
-      var infowindow;
-
-      function initMap() {
-        // Inisialisasi peta
-        map = new google.maps.Map(document.getElementById('map'), {
-          center: { lat: -6.175392, lng: 106.827153 }, // Default center
-          zoom: 15,
-        });
-
-        infowindow = new google.maps.InfoWindow(); // Inisialisasi InfoWindow
-
-        // Ambil lokasi dari eventAddress atau eventLocation
-        const inputLocation = "${eventAddress || eventLocation || ""}".replace(/'/g, "\\'");
-        if (inputLocation) {
-          document.getElementById('location-input').value = inputLocation; // Isi input lokasi
-          searchLocation(inputLocation); // Cari lokasi otomatis
-        }
-
-        // Tambahkan event listener untuk tombol pencarian
-        document.getElementById('search-btn').addEventListener('click', function () {
-          const location = document.getElementById('location-input').value;
-          searchLocation(location);
-        });
-      }
-
-      function searchLocation(location) {
-        const geocoder = new google.maps.Geocoder();
-        geocoder.geocode({ address: location }, function (results, status) {
-          if (status === 'OK' && results[0]) {
-            const coords = results[0].geometry.location;
-            map.setCenter(coords);
-            map.setZoom(15);
-
-            // Hapus marker sebelumnya jika ada
-            if (marker) {
-              marker.setMap(null);
-            }
-
-            // Tambahkan marker baru
-            marker = new google.maps.Marker({
-              map: map,
-              position: coords,
-            });
-
-            // Perbarui InfoWindow
-            const address = results[0].formatted_address;
-            infowindow.setContent("Koordinat: " + coords.toString() + "<br>Alamat: " + address);
-            infowindow.open(map, marker);
-
-            // Tampilkan InfoWindow saat marker diklik
-            marker.addListener('click', function () {
-              infowindow.open(map, marker);
-            });
-          } else {
-            alert('Geocoding failed: ' + status);
-          }
-        });
-      }
-    </script>
     `
-        : ""
+        : "<p>Map location is not available.</p>"
     }
     
     ${
@@ -2195,6 +2055,9 @@ img.error::after {
         })
       : ""
 
+    // Gunakan embedUrl dari input MapSelector
+    const safeEmbedUrl = mapLocation ? mapLocation.toString().replace(/'/g, "\\'") : ""
+
     // Get the effective background image
     const effectiveBackgroundImage = getEffectiveBackgroundImage()
     const safeBackgroundImage = effectiveBackgroundImage ? safeImageUrl(effectiveBackgroundImage) : ""
@@ -2212,7 +2075,6 @@ img.error::after {
   <link rel="stylesheet" href="style.css">
   <link rel="icon" href="favicon.png" type="image/png">
   <script src="script.js"></script>
-  <script src="script1.js"></script>
 </head>
 <body>
   <!-- Loading indicator -->
@@ -2359,24 +2221,19 @@ img.error::after {
     ${
       mapLocation
         ? `
-    <div class="section ${enableEffects && enableRgbEffects ? "rgb-border" : ""}">
+    <div class="section">
       <h2 class="section-title">Location</h2>
-        <!-- iframe Google Maps -->
+      <div class="map-container">
         <iframe
-          id="map1"
-          class="map-container"
-          width="870"
+          src="${safeEmbedUrl}"
+          width="100%"
           height="450"
-          style="border: 0"
+          style="border:0;"
+          allowfullscreen=""
           loading="lazy"
-          allowfullscreen
           referrerpolicy="no-referrer-when-downgrade"
-          src="https://www.google.com/maps/embed/v1/place?key=AIzaSyDvxxKvshRHZOnEaUGb_V9t3aIjOUVIDWw&q=Space+Needle,Seattle+WA"
-          onerror="handleMapError()"
-        >
-        </iframe>
-      <input className="grid gap-2 border p-3 rounded-md" type="text" id="locationInput" placeholder="address location places..." />
-      <button onclick="updateMap()" id="search" className="grid gap-2 border p-3 rounded-md">On Click, get location</button>
+        ></iframe>
+      </div>
     </div>
     `
         : ""
@@ -2834,7 +2691,6 @@ Created with the Wedding Invitation Builder
       zip.file("guest.html", generateGuestHTML(guestList));
       zip.file("style.css", generateCSS());
       zip.file("script.js", generateJS());
-      zip.file("script1.js", generateJS1());
       zip.file("README.md", generateReadme());
 
       // Add favicon
