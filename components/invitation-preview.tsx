@@ -2091,7 +2091,7 @@ img.error::after {
     <div class="main-image-container">
       <div class="main-image">
         <div class="main-image-frame photo-border">
-          <img src="${safeImageUrl(mainImage)}" alt="Main Wedding Photo" onerror="handleImageError(this)" />
+          <img src="main-image.${mainImage.split(";")[0].split("/")[1]}" alt="Main Wedding Photo" />
         </div>
       </div>
     </div>
@@ -2121,7 +2121,7 @@ img.error::after {
           ? `
       <div class="photo-container">
         <div class="photo-frame photo-border">
-          <img src="${safeImageUrl(malePhoto)}" alt="Groom" onerror="handleImageError(this)" />
+          <img src="male-photo.${malePhoto.split(";")[0].split("/")[1]}" alt="Groom" />
         </div>
       </div>
       `
@@ -2132,7 +2132,7 @@ img.error::after {
           ? `
       <div class="photo-container">
         <div class="photo-frame photo-border">
-          <img src="${safeImageUrl(femalePhoto)}" alt="Bride" onerror="handleImageError(this)" />
+          <img src="female-photo.${femalePhoto.split(";")[0].split("/")[1]}" alt="Bride" />
         </div>
       </div>
       `
@@ -2205,11 +2205,11 @@ img.error::after {
       <div class="gallery">
         ${galleryImages
           .map(
-            (img) => `
+            (img, index) => `
           <div class="gallery-item">
-            <img src="${safeImageUrl(img)}" alt="Couple photo" onerror="handleImageError(this)" />
+            <img src="gallery-image-${index + 1}.${img.split(";")[0].split("/")[1]}" alt="Gallery Image ${index + 1}" />
           </div>
-        `,
+        `
           )
           .join("")}
       </div>
@@ -2476,7 +2476,6 @@ wedding-invitation/
 ├── guest.html 
 ├── style.css 
 ├── script.js 
-├── script1.js
 ├── music.mp3 
 ├── README.md
 └── favicon.png
@@ -2720,7 +2719,39 @@ Created with the Wedding Invitation Builder
           }
         }
       }
-  
+
+        // Add gallery images if available
+        if (galleryImages && galleryImages.length > 0) {
+          galleryImages.forEach((image, index) => {
+            if (image.startsWith("data:image")) {
+              const [metadata, base64Data] = image.split(",");
+              const extension = metadata.split(";")[0].split("/")[1];
+              zip.file(`gallery-image-${index + 1}.${extension}`, base64Data, { base64: true });
+            }
+          });
+        }
+
+        // Add main image if available
+        if (mainImage && mainImage.startsWith("data:image")) {
+          const [metadata, base64Data] = mainImage.split(",");
+          const extension = metadata.split(";")[0].split("/")[1];
+          zip.file(`main-image.${extension}`, base64Data, { base64: true });
+        }
+
+        // Add male photo if available
+        if (malePhoto && malePhoto.startsWith("data:image")) {
+          const [metadata, base64Data] = malePhoto.split(",");
+          const extension = metadata.split(";")[0].split("/")[1];
+          zip.file(`male-photo.${extension}`, base64Data, { base64: true });
+        }
+
+        // Add female photo if available
+        if (femalePhoto && femalePhoto.startsWith("data:image")) {
+          const [metadata, base64Data] = femalePhoto.split(",");
+          const extension = metadata.split(";")[0].split("/")[1];
+          zip.file(`female-photo.${extension}`, base64Data, { base64: true });
+        }
+      
       // Generate the zip file
       const content = await zip.generateAsync({ type: "blob" });
   
