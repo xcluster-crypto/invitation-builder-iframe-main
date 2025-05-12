@@ -2392,6 +2392,7 @@ img.error::after {
   </head>
   <body>
     ${safeBackgroundImage ? '<div class="bg-container"></div>' : ""}
+   <div class="container">
 
     <h3>Guest List</h3>
     <div class="location" style="text-align: center;">${coupleNames || "Wedding Invitation"}</div>
@@ -2432,6 +2433,12 @@ img.error::after {
           .join("")}
       </tbody>
     </table>
+   </div>
+    `
+        : `
+        <p class="empty-message">No guests have RSVP'd yet.</p>
+      `
+    }
     `
         : `<p class="empty-message">No guests have RSVP'd yet.</p>`
     }
