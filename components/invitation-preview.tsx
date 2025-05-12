@@ -820,8 +820,40 @@ img.error::after {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
-  `
+
+  /* Modal styles */
+  .modal {
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
+
+  .modal-content {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    width: 400px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    position: relative;
+  }
+
+  .close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 20px;
+    cursor: pointer;
+  }
+ `
+ }
 
   // Function to generate JavaScript file content
   const generateJS = () => {
@@ -1958,6 +1990,52 @@ img.error::after {
             this.reset();
           });
         }
+
+        // Open IndexedDB
+        const dbPromise = indexedDB.open('RSVPDatabase', 1);
+
+        dbPromise.onupgradeneeded = function (event) {
+          const db = event.target.result;
+          if (!db.objectStoreNames.contains('RSVPStore')) {
+            db.createObjectStore('RSVPStore', { keyPath: 'id', autoIncrement: true });
+          }
+        };
+
+        dbPromise.onerror = function (event) {
+          console.error('IndexedDB error:', event.target.errorCode);
+        };
+
+        // Handle RSVP form submission
+        document.getElementById('rsvp-form').addEventListener('submit', function (event) {
+          event.preventDefault(); // Prevent default form submission
+
+          const name = document.getElementById('name').value;
+          const address = document.getElementById('alamat').value;
+          const phone = document.getElementById('phone').value;
+          const attending = document.getElementById('attending').value;
+          const guests = document.getElementById('guests').value || null;
+          const message = document.getElementById('message').value;
+
+          const rsvpData = { name, address, phone, attending, guests, message };
+
+          const dbRequest = indexedDB.open('RSVPDatabase', 1);
+
+          dbRequest.onsuccess = function (event) {
+            const db = event.target.result;
+            const transaction = db.transaction('RSVPStore', 'readwrite');
+            const store = transaction.objectStore('RSVPStore');
+            store.add(rsvpData);
+
+            transaction.oncomplete = function () {
+              alert('RSVP submitted successfully!');
+              document.getElementById('rsvp-form').reset();
+            };
+
+            transaction.onerror = function (event) {
+              console.error('Transaction error:', event.target.error);
+            };
+          };
+        });
       </script>
     </div>
     `
@@ -2339,6 +2417,52 @@ img.error::after {
       function openGuestList() {
         window.open('guest.html', '_blank');
       }
+      
+      // Open IndexedDB
+      const dbPromise = indexedDB.open('RSVPDatabase', 1);
+
+      dbPromise.onupgradeneeded = function (event) {
+        const db = event.target.result;
+        if (!db.objectStoreNames.contains('RSVPStore')) {
+          db.createObjectStore('RSVPStore', { keyPath: 'id', autoIncrement: true });
+        }
+      };
+
+      dbPromise.onerror = function (event) {
+        console.error('IndexedDB error:', event.target.errorCode);
+      };
+
+      // Handle RSVP form submission
+      document.getElementById('rsvp-form').addEventListener('submit', function (event) {
+        event.preventDefault(); // Prevent default form submission
+
+        const name = document.getElementById('name').value;
+        const address = document.getElementById('alamat').value;
+        const phone = document.getElementById('phone').value;
+        const attending = document.getElementById('attending').value;
+        const guests = document.getElementById('guests').value || null;
+        const message = document.getElementById('message').value;
+
+        const rsvpData = { name, address, phone, attending, guests, message };
+
+        const dbRequest = indexedDB.open('RSVPDatabase', 1);
+
+        dbRequest.onsuccess = function (event) {
+          const db = event.target.result;
+          const transaction = db.transaction('RSVPStore', 'readwrite');
+          const store = transaction.objectStore('RSVPStore');
+          store.add(rsvpData);
+
+          transaction.oncomplete = function () {
+            alert('RSVP submitted successfully!');
+            document.getElementById('rsvp-form').reset();
+          };
+
+          transaction.onerror = function (event) {
+            console.error('Transaction error:', event.target.error);
+          };
+        };
+      });
     </script>
   
   ${
@@ -2361,7 +2485,7 @@ img.error::after {
 `
   }
 
-    // Function to generate indexHTML file content
+    // Function to generateGuestHTML file content
     const generateGuestHTML = (guestList: { name: string; alamat?: string; phone?: string; attending: string; guests?: number; message?: string }[]) => {
       // Format date for display
       const formattedDate = eventDate
@@ -2377,8 +2501,8 @@ img.error::after {
       const effectiveBackgroundImage = getEffectiveBackgroundImage()
       const safeBackgroundImage = effectiveBackgroundImage ? safeImageUrl(effectiveBackgroundImage) : ""
   
-    // Generate GuestHTML content
-    return `
+  // Generate GuestHTML content
+  return `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -2389,20 +2513,82 @@ img.error::after {
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <link rel="icon" href="favicon.png" type="image/png">
   <link rel="stylesheet" href="style.css">
-  </head>
-  <body>
-    ${safeBackgroundImage ? '<div class="bg-container"></div>' : ""}
+  <style>
+    body {
+      font-family: 'Playfair Display', serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f9f9f9;
+      color: #333;
+    }
+    .container {
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 20px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    h3 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+    th, td {
+      padding: 10px;
+      text-align: left;
+      border: 1px solid #ddd;
+    }
+    th {
+      background-color: #f4f4f4;
+    }
+    .pagination {
+      text-align: center;
+      margin-top: 20px;
+    }
+    .pagination button {
+      margin: 0 5px;
+      padding: 5px 10px;
+      border: none;
+      background-color: #007bff;
+      color: #fff;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .pagination button.active {
+      background-color: #0056b3;
+    }
+    .pagination button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  ${safeBackgroundImage ? `<div class="bg-container" style="background-image: url('${safeBackgroundImage}');"></div>` : ""}
   <div class="container">
     <h3>Guest List</h3>
     <div class="location" style="text-align: center;">${coupleNames || "Wedding Invitation"}</div>
-    <div class="date-time" style="text-align: center;">${eventDate || "Event Date"} at ${eventTime || "Event Time"}</div>
+    <div class="date-time" style="text-align: center;">${formattedDate || "Event Date"} at ${eventTime || "Event Time"}</div>
     <div class="location" style="text-align: center;">${eventLocation || "Event Location"}</div>
 
     ${
       guestList.length > 0
         ? `
-    <div class="section ${enableEffects && enableRgbEffects ? "rgb-border" : ""}">
-    <table>
+      <div class="form-group" style="text-align: right;">
+        <!-- Button for showing RSVP form -->
+        <button type="button" class="form-button" id="show-rsvp-form-btn" style="margin-bottom: 10px;">
+          <i class="fas fa-plus"></i> <!-- Font Awesome plus icon -->
+        </button>
+        <!-- Button for downloading PDF -->
+        <button type="submit" class="form-button" id="download-pdf-btn" style="margin-bottom: 10px;">
+          <i class="fas fa-download"></i> <!-- Font Awesome download icon -->
+        </button>
+      </div>
+    <table border="1" width="100%">
       <thead>
         <tr>
           <th>#</th>
@@ -2414,54 +2600,277 @@ img.error::after {
           <th>Message</th>
         </tr>
       </thead>
-      <tbody>
+      <tbody id="guest-list">
         ${guestList
           .map(
             (guest, index) => `
-        <tr>
-          <td>${index + 1}</td>
-          <td>${guest.name}</td>
-          <td>${guest.alamat || "N/A"}</td>
-          <td>${guest.phone || "N/A"}</td>
-          <td>${guest.attending}</td>
-          <td>${guest.guests || "N/A"}</td>
-          <td>${guest.message || "N/A"}</td>
-        </tr>
+          <tr>
+            <td>${index + 1}</td>
+            <td>${guest.name || "-"}</td>
+            <td>${guest.alamat || "-"}</td>
+            <td>${guest.phone || "-"}</td>
+            <td>${guest.attending || "-"}</td>
+            <td>${guest.guests || "-"}</td>
+            <td>${guest.message || "-"}</td>
+          </tr>
         `
           )
           .join("")}
       </tbody>
     </table>
-   </div> 
+    <div class="pagination" id="pagination">
+      <!-- Pagination buttons will be dynamically added here -->
+    </div>
+        <!-- RSVP Modal -->
+    <div id="rsvp-modal" class="modal" style="display: none;">
+      <div class="modal-content">
+        <span class="close-btn" id="close-modal-btn">&times;</span>
+        <h3>Add RSVP</h3>
+        <form id="rsvp-form">
+          <div>
+            <label for="name">Name:</label>
+            <input type="text" id="name" required>
+          </div>
+          <div>
+            <label for="address">Address:</label>
+            <input type="text" id="address" required>
+          </div>
+          <div>
+            <label for="phone">Phone:</label>
+            <input type="text" id="phone" required>
+          </div>
+          <div>
+            <label for="attending">Attending:</label>
+            <select id="attending" required>
+              <option value="Yes">Yes</option>
+              <option value="No">No</option>
+            </select>
+          </div>
+          <div id="guests-container" style="display: none;">
+            <label for="guests">Guests:</label>
+            <input type="number" id="guests" min="0">
+          </div>
+          <div>
+            <label for="message">Message:</label>
+            <textarea id="message"></textarea>
+          </div>
+          <button type="submit">Submit RSVP</button>
+        </form>
+      </div>
+    </div>
     `
         : `<p class="empty-message">No guests have RSVP'd yet.</p>`
     }
-  </body>
-  </html>
-    `;
-  };
+  </div>
+    <script>
+      // Get modal elements
+      const modal = document.getElementById('rsvp-modal');
+      const showModalBtn = document.getElementById('show-rsvp-form-btn');
+      const closeModalBtn = document.getElementById('close-modal-btn');
 
-  const guestList = [
-    {
-      name: "John Doe",
-      alamat: "123 Main St",
-      phone: "123-456-7890",
-      attending: "yes",
-      guests: 2,
-      message: "Looking forward to it!",
-    },
-    {
-      name: "Jane Smith",
-      alamat: "456 Elm St",
-      phone: "987-654-3210",
-      attending: "no",
-      guests: 0,
-      message: "Sorry, I can’t make it.",
-    },
-  ];
-  
-  const guestHTML = generateGuestHTML(guestList);
-  console.log(guestHTML); // HTML string untuk halaman Guest List
+      // Show modal when the button is clicked
+      showModalBtn.addEventListener('click', function () {
+        modal.style.display = 'flex';
+      });
+
+      // Close modal when the close button is clicked
+      closeModalBtn.addEventListener('click', function () {
+        modal.style.display = 'none';
+      });
+
+      // Close modal when clicking outside the modal content
+      window.addEventListener('click', function (event) {
+        if (event.target === modal) {
+          modal.style.display = 'none';
+        }
+      });
+
+      // Handle RSVP form submission
+      document.getElementById('rsvp-form').addEventListener('submit', function (event) {
+        event.preventDefault(); // Prevent default form submission
+
+        const name = document.getElementById('name').value;
+        const address = document.getElementById('address').value;
+        const phone = document.getElementById('phone').value;
+        const attending = document.getElementById('attending').value;
+        const guests = document.getElementById('guests').value || null;
+        const message = document.getElementById('message').value;
+
+        const rsvpData = { name, address, phone, attending, guests, message };
+
+        // Save RSVP data to IndexedDB
+        const dbRequest = indexedDB.open('RSVPDatabase', 1);
+
+        dbRequest.onsuccess = function (event) {
+          const db = event.target.result;
+          const transaction = db.transaction('RSVPStore', 'readwrite');
+          const store = transaction.objectStore('RSVPStore');
+          store.add(rsvpData);
+
+          transaction.oncomplete = function () {
+            alert('RSVP added successfully!');
+            document.getElementById('rsvp-form').reset();
+            modal.style.display = 'none'; // Close the modal
+            location.reload(); // Reload the page to update the guest list
+          };
+
+          transaction.onerror = function (event) {
+            console.error('Transaction error:', event.target.error);
+          };
+        };
+      });
+
+      // Get the "Attending" and "Guests" elements
+      const attendingSelect = document.getElementById('attending');
+      const guestsContainer = document.getElementById('guests-container');
+
+      // Add event listener to "Attending" select input
+      attendingSelect.addEventListener('change', function () {
+        if (attendingSelect.value === 'Yes') {
+          guestsContainer.style.display = 'block'; // Show "Guests" input
+        } else {
+          guestsContainer.style.display = 'none'; // Hide "Guests" input
+        }
+      });
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    <script>
+      const guestList = ${JSON.stringify(guestList)};
+      const rowsPerPage = 5;
+      let currentPage = 1;
+
+            // Open IndexedDB
+      const dbRequest = indexedDB.open('RSVPDatabase', 1);
+
+      dbRequest.onsuccess = function (event) {
+        const db = event.target.result;
+        const transaction = db.transaction('RSVPStore', 'readonly');
+        const store = transaction.objectStore('RSVPStore');
+        const request = store.getAll();
+
+        request.onsuccess = function () {
+          guestList = request.result; // Assign result to global guestList
+          renderTable(); // Render the table for the first page
+          renderPagination(); // Render pagination buttons
+        };
+
+        request.onerror = function (event) {
+          console.error('Error fetching data:', event.target.error);
+        };
+      };
+
+      dbRequest.onerror = function (event) {
+        console.error('IndexedDB error:', event.target.errorCode);
+      };
+
+      function renderTable() {
+        const tableBody = document.getElementById('guest-list');
+        tableBody.innerHTML = '';
+
+        const startIndex = (currentPage - 1) * rowsPerPage;
+        const endIndex = Math.min(startIndex + rowsPerPage, guestList.length);
+
+        for (let i = startIndex; i < endIndex; i++) {
+          const guest = guestList[i];
+          const row = document.createElement('tr');
+          row.innerHTML = \`
+            <td>\${i + 1}</td>
+            <td>\${guest.name || '-'}</td>
+            <td>\${guest.alamat || '-'}</td>
+            <td>\${guest.phone || '-'}</td>
+            <td>\${guest.attending || '-'}</td>
+            <td>\${guest.guests || '-'}</td>
+            <td>\${guest.message || '-'}</td>
+          \`;
+          tableBody.appendChild(row);
+        }
+      }
+
+      function renderPagination() {
+        const pagination = document.getElementById('pagination');
+        pagination.innerHTML = '';
+
+        const totalPages = Math.ceil(guestList.length / rowsPerPage);
+
+        for (let i = 1; i <= totalPages; i++) {
+          const button = document.createElement('button');
+          button.textContent = i;
+          button.className = 'pagination-button';
+          button.style.margin = '0 5px';
+          button.style.padding = '5px 10px';
+          button.style.cursor = 'pointer';
+
+          // Highlight the current page button
+          if (i === currentPage) {
+            button.style.backgroundColor = '#007bff';
+            button.style.color = '#fff';
+            button.style.border = 'none';
+            button.style.borderRadius = '4px';
+          }
+
+          // Add click event to change the page
+          button.addEventListener('click', function () {
+            currentPage = i;
+            renderTable(); // Re-render the table for the selected page
+            renderPagination(); // Re-render pagination buttons
+          });
+
+          pagination.appendChild(button);
+        }
+      }
+
+      document.addEventListener('DOMContentLoaded', () => {
+        renderTable();
+        renderPagination();
+      });
+
+            // Add download PDF functionality
+      document.getElementById('download-pdf-btn').addEventListener('click', function () {
+        if (guestList.length === 0) {
+          alert('No data available to download.');
+          return;
+        }
+        generatePDF(guestList);
+      });
+
+      // Function to generate PDF
+      async function generatePDF(data) {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        // Add title
+        doc.setFontSize(16);
+        doc.text('Guest List', 10, 10);
+
+        // Add table headers
+        const headers = ['#', 'Name', 'Address', 'Phone', 'Attending', 'Guests', 'Message'];
+        let y = 20;
+        doc.setFontSize(12);
+        doc.text(headers.join(' | '), 10, y);
+
+        // Add table rows
+        data.forEach((guest, index) => {
+          y += 10;
+          const row = [
+            index + 1,
+            guest.name,
+            guest.address,
+            guest.phone,
+            guest.attending,
+            guest.guests || '-',
+            guest.message || '-',
+          ];
+          doc.text(row.join(' | '), 10, y);
+        });
+
+        // Save the PDF
+        doc.save('guest_list.pdf');
+      }
+    </script>
+</body>
+</html>
+  `;
+};
 
   // Function to generate README.md content
   const generateReadme = () => {
