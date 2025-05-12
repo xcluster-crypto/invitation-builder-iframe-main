@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useInvitationStore, type Guest } from "@/lib/store"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -38,10 +38,12 @@ export function RSVPManager() {
 
   const handleAddGuest = () => {
     if (newGuest.name) {
-      addGuest({
+      const newGuestWithId = {
         ...newGuest,
         id: Date.now().toString(),
-      })
+      }
+      addGuest(newGuestWithId)
+
       // Reset form
       setNewGuest({
         name: "",
@@ -94,7 +96,7 @@ export function RSVPManager() {
               />
             </div>
           </div>
-
+{/*
           <Tabs defaultValue="guests" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="guests">Guest List</TabsTrigger>
@@ -299,6 +301,7 @@ export function RSVPManager() {
               )}
             </TabsContent>
           </Tabs>
+*/}
         </div>
       )}
     </div>
