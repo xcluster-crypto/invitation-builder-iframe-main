@@ -858,6 +858,7 @@ img.error::after {
   // Function to generate JavaScript file content
   const generateJS = () => {
     return `
+
       // Handle image loading errors
       function handleImageError(img) {
         img.classList.add('error');
@@ -951,38 +952,6 @@ img.error::after {
               guestsGroup.style.display = 'block';
             } else {
               guestsGroup.style.display = 'none';
-            }
-          });
-          
-          document.getElementById('rsvp-form').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const formData = {
-              name: document.getElementById('name').value,
-              email: document.getElementById('alamat').value,
-              phone: document.getElementById('phone').value,
-              attending: document.getElementById('attending').value,
-              guests: document.getElementById('guests') ? document.getElementById('guests').value : null,
-              message: document.getElementById('message').value,
-            };
-
-            try {
-              const response = await fetch('/api/save-rsvp', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData),
-              });
-
-              if (response.ok) {
-                alert('Thank you for your RSVP! We have received your response.');
-                this.reset();
-              } else {
-                const errorData = await response.json();
-                alert('Error: ' + errorData.error);
-              }
-            } catch (error) {
-              console.error('Error submitting RSVP:', error);
-              alert('An error occurred while submitting your RSVP. Please try again.');
             }
           });
 
@@ -2042,10 +2011,66 @@ img.error::after {
         : ""
     }
           
-    <footer>
+    <!-- Guest List Section -->
+    <div class="section">
+      <h2 onclick="openGuestList()" style="cursor: pointer; color: blue; text-decoration: underline;">
+        Guest List
+      </h2>
       <p>We can't wait to celebrate with you!</p>
-    </footer>
-  </div>
+    </div>
+   </div>
+    <script>
+      // Function to open guest.html in a new tab
+      function openGuestList() {
+        window.open('guest.html', '_blank');
+      }
+      
+      // Open IndexedDB
+      const dbPromise = indexedDB.open('RSVPDatabase', 1);
+
+      dbPromise.onupgradeneeded = function (event) {
+        const db = event.target.result;
+        if (!db.objectStoreNames.contains('RSVPStore')) {
+          db.createObjectStore('RSVPStore', { keyPath: 'id', autoIncrement: true });
+        }
+      };
+
+      dbPromise.onerror = function (event) {
+        console.error('IndexedDB error:', event.target.errorCode);
+      };
+
+      // Handle RSVP form submission
+      document.getElementById('rsvp-form').addEventListener('submit', function (event) {
+        event.preventDefault(); // Prevent default form submission
+
+        const name = document.getElementById('name').value;
+        const address = document.getElementById('alamat').value;
+        const phone = document.getElementById('phone').value;
+        const attending = document.getElementById('attending').value;
+        const guests = document.getElementById('guests').value || null;
+        const message = document.getElementById('message').value;
+
+        const rsvpData = { name, address, phone, attending, guests, message };
+
+        const dbRequest = indexedDB.open('RSVPDatabase', 1);
+
+        dbRequest.onsuccess = function (event) {
+          const db = event.target.result;
+          const transaction = db.transaction('RSVPStore', 'readwrite');
+          const store = transaction.objectStore('RSVPStore');
+          store.add(rsvpData);
+
+          transaction.oncomplete = function () {
+            alert('RSVP submitted successfully!');
+            document.getElementById('rsvp-form').reset();
+          };
+
+          transaction.onerror = function (event) {
+            console.error('Transaction error:', event.target.error);
+          };
+        };
+      });
+    </script>
   
   ${
     backgroundMusic
@@ -2601,21 +2626,7 @@ img.error::after {
         </tr>
       </thead>
       <tbody id="guest-list">
-        ${guestList
-          .map(
-            (guest, index) => `
-          <tr>
-            <td>${index + 1}</td>
-            <td>${guest.name || "-"}</td>
-            <td>${guest.alamat || "-"}</td>
-            <td>${guest.phone || "-"}</td>
-            <td>${guest.attending || "-"}</td>
-            <td>${guest.guests || "-"}</td>
-            <td>${guest.message || "-"}</td>
-          </tr>
-        `
-          )
-          .join("")}
+       <!-- Example data, replace with dynamic data from IndexedDB -->
       </tbody>
     </table>
     <div class="pagination" id="pagination">
@@ -2735,11 +2746,11 @@ img.error::after {
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
     <script>
-      const guestList = ${JSON.stringify(guestList)};
+      const guestList = []; // Initialize guestList as an empty array
       const rowsPerPage = 5;
       let currentPage = 1;
 
-            // Open IndexedDB
+      // Open IndexedDB
       const dbRequest = indexedDB.open('RSVPDatabase', 1);
 
       dbRequest.onsuccess = function (event) {
@@ -2819,12 +2830,12 @@ img.error::after {
         }
       }
 
-      document.addEventListener('DOMContentLoaded', () => {
-        renderTable();
-        renderPagination();
-      });
+      //document.addEventListener('DOMContentLoaded', () => {
+      //  renderTable();
+      //  renderPagination();
+      //});
 
-            // Add download PDF functionality
+      // Add download PDF functionality
       document.getElementById('download-pdf-btn').addEventListener('click', function () {
         if (guestList.length === 0) {
           alert('No data available to download.');
@@ -2895,7 +2906,6 @@ wedding-invitation/
 - \`guest.html\`: The main file to open the invitation in the browser.
 - \`style.css\`: CSS file to set the appearance of the invitation.
 - \`script.js\`: JavaScript file to add interactivity.
-- \`script1.js\`: JavaScript file to add interactivity.
 - \`music.mp3\`: Background music file to play automatically (if you added music).
 - \`README.md\`: This file, which contains instructions and information about the invitation.
 - \`favicon.png\`: Small icon that appears in browser tabs.
@@ -3079,25 +3089,7 @@ Created with the Wedding Invitation Builder
       // Add files to the zip
       // zip.file(`${coupleNames}.html`, generateHTML());
       zip.file("index.html", generateIndexHTML());
-      const guestList = [
-        {
-          name: "John Doe",
-          alamat: "123 Main St",
-          phone: "123-456-7890",
-          attending: "yes",
-          guests: 2,
-          message: "Looking forward to it!",
-        },
-        {
-          name: "Jane S",
-          alamat: "456 Elm St",
-          phone: "987-654-3210",
-          attending: "no",
-          guests: 0,
-          message: "Sorry, I can’t make it.",
-        },
-      ];
-      zip.file("guest.html", generateGuestHTML(guestList));
+      zip.file("guest.html", generateGuestHTML([])); // Pass an empty array or the actual guest list
       zip.file("style.css", generateCSS());
       zip.file("script.js", generateJS());
       zip.file("README.md", generateReadme());
