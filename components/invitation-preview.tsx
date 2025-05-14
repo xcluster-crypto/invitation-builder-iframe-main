@@ -2571,27 +2571,7 @@ img.error::after {
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <link rel="icon" href="favicon.png" type="image/png">
   <link rel="stylesheet" href="style.css">
-  <style>
-    body {
-      font-family: 'Playfair Display', serif;
-      margin: 0;
-      padding: 0;
-      background-color: #f9f9f9;
-      color: #333;
-    }
-    .container {
-      max-width: 800px;
-      margin: 20px auto;
-      padding: 20px;
-      background: #fff;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-    h3 {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
 </head>
 <body>
   ${safeBackgroundImage ? `<div class="bg-container" style="background-image: url('${safeBackgroundImage}');"></div>` : ""}
@@ -2604,17 +2584,24 @@ img.error::after {
     ${
       guestList.length > 0
         ? `
-      <div class="form-group" style="text-align: right;">
-        <!-- Button for showing RSVP form -->
-        <button type="button" class="form-button" id="show-rsvp-form-btn" style="margin-bottom: 10px;">
-          <i class="fas fa-plus"></i> <!-- Font Awesome plus icon -->
-        </button>
-        <!-- Button for downloading PDF -->
-        <button type="submit" class="form-button" id="download-pdf-btn" style="margin-bottom: 10px;">
-          <i class="fas fa-download"></i> <!-- Font Awesome download icon -->
-        </button>
-      </div>
-    <table border="1" width="100%">
+    <div class="section ${enableEffects && enableRgbEffects ? "rgb-border" : ""}">
+      <!-- Bagian atas tombol dan icon -->
+	     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+  	    <!-- Icon kembali ke home -->
+  	    <a href="/" title="Kembali ke Home" style="text-decoration: none; font-size: 20px; color: #000;">
+    	    <i class="fas fa-arrow-left"></i>
+  	    </a>
+        <!-- Tombol + dan Download di tengah -->
+	      <div style="display: flex; gap: 10px;">
+    	   <button type="button" class="form-button" id="show-rsvp-form-btn" style="margin-bottom: 10px;">
+             <i class="fas fa-plus"></i>
+         </button>
+         <button type="button" class="form-button" id="download-pdf-btn" style="margin-bottom: 10px;">
+             <i class="fas fa-download"></i>
+         </button>
+        </div>
+       </div>
+     <table border="1" width="100%">
       <thead>
         <tr>
           <th>#</th>
@@ -2629,11 +2616,12 @@ img.error::after {
       <tbody id="guest-list">
        <!-- Example data, replace with dynamic data from IndexedDB -->
       </tbody>
-    </table>
-    <div class="pagination" id="pagination">
+     </table>
+    </div>
+    <div id="pagination" style="text-align: center; margin-top: 10px;">
       <!-- Pagination buttons will be dynamically added here -->
     </div>
-        <!-- RSVP Modal -->
+      <!-- RSVP Modal -->
     <div id="rsvp-modal" class="modal" style="display: none;">
       <div class="modal-content">
         <span class="close-btn" id="close-modal-btn">&times;</span>
@@ -2658,7 +2646,7 @@ img.error::after {
               <option value="No">No</option>
             </select>
           </div>
-          <div id="guests-container" style="display: none;">
+          <div id="guests-container" style="display: true;">
             <label for="guests">Guests:</label>
             <input type="number" id="guests" min="0">
           </div>
@@ -2673,171 +2661,193 @@ img.error::after {
     `
         : `<p class="empty-message">No guests have RSVP'd yet.</p>`
     }
-  </div>
+    </div>
     <script>
-      // Get modal elements
-      const modal = document.getElementById('rsvp-modal');
-      const showModalBtn = document.getElementById('show-rsvp-form-btn');
-      const closeModalBtn = document.getElementById('close-modal-btn');
+      // ==========================
+      // Inisialisasi IndexedDB
+      // ==========================
+      const dbName = 'RSVPDatabase';
+      const storeName = 'RSVPStore';
 
-      // Show modal when the button is clicked
-      showModalBtn.addEventListener('click', function () {
-        modal.style.display = 'flex';
-      });
+      let db;
 
-      // Close modal when the close button is clicked
-      closeModalBtn.addEventListener('click', function () {
-        modal.style.display = 'none';
-      });
-
-      // Close modal when clicking outside the modal content
-      window.addEventListener('click', function (event) {
-        if (event.target === modal) {
-          modal.style.display = 'none';
-        }
-      });
-
-      // Handle RSVP form submission
-      document.getElementById('rsvp-form').addEventListener('submit', function (event) {
-        event.preventDefault(); // Prevent default form submission
-
-        const name = document.getElementById('name').value;
-        const address = document.getElementById('address').value;
-        const phone = document.getElementById('phone').value;
-        const attending = document.getElementById('attending').value;
-        const guests = document.getElementById('guests').value || null;
-        const message = document.getElementById('message').value;
-
-        const rsvpData = { name, address, phone, attending, guests, message };
-
-        // Save RSVP data to IndexedDB
-        const dbRequest = indexedDB.open('RSVPDatabase', 1);
-
-        dbRequest.onsuccess = function (event) {
-          const db = event.target.result;
-          const transaction = db.transaction('RSVPStore', 'readwrite');
-          const store = transaction.objectStore('RSVPStore');
-          store.add(rsvpData);
-
-          transaction.oncomplete = function () {
-            alert('RSVP added successfully!');
-            document.getElementById('rsvp-form').reset();
-            modal.style.display = 'none'; // Close the modal
-            location.reload(); // Reload the page to update the guest list
-          };
-
-          transaction.onerror = function (event) {
-            console.error('Transaction error:', event.target.error);
-          };
+      function initDB() {
+        const request = indexedDB.open(dbName, 1);
+        request.onupgradeneeded = function (event) {
+          db = event.target.result;
+          if (!db.objectStoreNames.contains(storeName)) {
+            db.createObjectStore(storeName, { keyPath: 'id', autoIncrement: true });
+          }
         };
-      });
+        request.onsuccess = function (event) {
+          db = event.target.result;
+          loadData(); // Muat data setelah DB siap
+        };
+        request.onerror = function (event) {
+          console.error('Error opening IndexedDB:', event.target.error);
+        };
+      }
 
-      // Get the "Attending" and "Guests" elements
-      const attendingSelect = document.getElementById('attending');
-      const guestsContainer = document.getElementById('guests-container');
-
-      // Add event listener to "Attending" select input
-      attendingSelect.addEventListener('change', function () {
-        if (attendingSelect.value === 'Yes') {
-          guestsContainer.style.display = 'block'; // Show "Guests" input
-        } else {
-          guestsContainer.style.display = 'none'; // Hide "Guests" input
-        }
-      });
-    </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
-    <script>
-      const guestList = []; // Initialize guestList as an empty array
+      // ==========================
+      // Load data dari IndexedDB
+      // ==========================
+      let guestList = [];
       const rowsPerPage = 5;
       let currentPage = 1;
 
-      // Open IndexedDB
-      const dbRequest = indexedDB.open('RSVPDatabase', 1);
-
-      dbRequest.onsuccess = function (event) {
-        const db = event.target.result;
-        const transaction = db.transaction('RSVPStore', 'readonly');
-        const store = transaction.objectStore('RSVPStore');
+      function loadData() {
+        const transaction = db.transaction([storeName], 'readonly');
+        const store = transaction.objectStore(storeName);
         const request = store.getAll();
 
         request.onsuccess = function () {
-          guestList = request.result; // Assign result to global guestList
-          renderTable(); // Render the table for the first page
-          renderPagination(); // Render pagination buttons
+          guestList = request.result;
+          renderTable();
+          renderPagination();
         };
-
-        request.onerror = function (event) {
-          console.error('Error fetching data:', event.target.error);
+        request.onerror = function () {
+          console.error('Error fetching data.');
         };
-      };
+      }
 
-      dbRequest.onerror = function (event) {
-        console.error('IndexedDB error:', event.target.errorCode);
-      };
-
+      // ==========================
+      // Render tabel data RSVP
+      // ==========================
       function renderTable() {
-        const tableBody = document.getElementById('guest-list');
-        tableBody.innerHTML = '';
+        const tbody  = document.getElementById('guest-list');
+        tbody.innerHTML = '';
 
-        const startIndex = (currentPage - 1) * rowsPerPage;
-        const endIndex = Math.min(startIndex + rowsPerPage, guestList.length);
+        const (startIdx  = (currentPage - 1) * rowsPerPage;
+        const endIdx  = Math.min((startIdx  + rowsPerPage, guestList.length);
 
-        for (let i = startIndex; i < endIndex; i++) {
+        for (let i = startIdx; i < endIdx; i++) {
           const guest = guestList[i];
           const row = document.createElement('tr');
           row.innerHTML = \`
             <td>\${i + 1}</td>
             <td>\${guest.name || '-'}</td>
-            <td>\${guest.alamat || '-'}</td>
+            <td>\${guest.address || '-'}</td>
             <td>\${guest.phone || '-'}</td>
             <td>\${guest.attending || '-'}</td>
-            <td>\${guest.guests || '-'}</td>
+            <td>\${guest.guests !== undefined ? guest.guests : '-'}</td>
             <td>\${guest.message || '-'}</td>
           \`;
           tableBody.appendChild(row);
         }
       }
 
+      // ==========================
+      // Render pagination
+      // ==========================
       function renderPagination() {
-        const pagination = document.getElementById('pagination');
-        pagination.innerHTML = '';
+        const paginationDiv = document.getElementById('pagination');
+        paginationDiv.innerHTML = '';
 
         const totalPages = Math.ceil(guestList.length / rowsPerPage);
+        if (totalPages <= 1) return; // Tidak perlu pagination jika cuma 1 halaman
 
         for (let i = 1; i <= totalPages; i++) {
-          const button = document.createElement('button');
-          button.textContent = i;
-          button.className = 'pagination-button';
-          button.style.margin = '0 5px';
-          button.style.padding = '5px 10px';
-          button.style.cursor = 'pointer';
+          const btn = document.createElement('button');
+          btn.textContent = i;
+          btn.style.margin = '0 5px';
+          btn.style.padding = '5px 10px';
+          btn.style.cursor = 'pointer';
 
-          // Highlight the current page button
           if (i === currentPage) {
-            button.style.backgroundColor = '#007bff';
-            button.style.color = '#fff';
-            button.style.border = 'none';
-            button.style.borderRadius = '4px';
+            btn.style.backgroundColor = '#007bff';
+            btn.style.color = '#fff';
+            btn.style.border = 'none';
+            btn.style.borderRadius = '4px';
           }
 
-          // Add click event to change the page
-          button.addEventListener('click', function () {
+          btn.addEventListener('click', () => {
             currentPage = i;
-            renderTable(); // Re-render the table for the selected page
-            renderPagination(); // Re-render pagination buttons
+            renderTable();
+            renderPagination();
           });
 
-          pagination.appendChild(button);
+          paginationDiv.appendChild(btn);
         }
       }
 
-      //document.addEventListener('DOMContentLoaded', () => {
-      //  renderTable();
-      //  renderPagination();
-      //});
+      // ==========================
+      // Event listener untuk modal
+      // ==========================
+      const modal = document.getElementById('rsvp-modal');
+      const showModalBtn = document.getElementById('show-rsvp-form-btn');
+      const closeModalBtn = document.getElementById('close-modal-btn');
 
-      // Add download PDF functionality
-      document.getElementById('download-pdf-btn').addEventListener('click', function () {
+      showModalBtn.addEventListener('click', () => {
+        modal.style.display = 'flex';
+      });
+
+      closeModalBtn.addEventListener('click', () => {
+        modal.style.display = 'none';
+      });
+
+      window.addEventListener('click', (event) => {
+        if (event.target === modal) {
+          modal.style.display = 'none';
+        }
+      });
+
+      // ==========================
+      // Handle form submit
+      // ==========================
+      document.getElementById('rsvp-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const name = document.getElementById('name').value.trim();
+        const address = document.getElementById('address').value.trim();
+        const phone = document.getElementById('phone').value.trim();
+        const attending = document.getElementById('attending').value;
+        const guests = document.getElementById('guests').value;
+        const message = document.getElementById('message').value.trim();
+
+        const newRSVP = {
+          name,
+          address,
+          phone,
+          attending,
+          guests: guests !== '' ? parseInt(guests) : 0,
+          message,
+        };
+
+        const transaction = db.transaction([storeName], 'readwrite');
+        const store = transaction.objectStore(storeName);
+        store.add(newRSVP);
+
+        transaction.oncomplete = () => {
+          alert('RSVP added successfully!');
+          document.getElementById('rsvp-form').reset();
+          modal.style.display = 'none';
+          loadData(); // Muat ulang data untuk update tabel
+        };
+
+        transaction.onerror = () => {
+          console.error('Gagal menyimpan RSVP');
+        };
+      });
+
+      // ==========================
+      // Tampilkan/hide Guests input berdasarkan Attending
+      // ==========================
+      const attendingSelect = document.getElementById('attending');
+      const guestsContainer = document.getElementById('guests-container');
+
+      attendingSelect.addEventListener('change', () => {
+        if (attendingSelect.value === 'Yes') {
+          guestsContainer.style.display = 'block';
+        } else {
+          guestsContainer.style.display = 'none';
+          document.getElementById('guests').value = '';
+        }
+      });
+
+      // ==========================
+      // Download PDF
+      // ==========================
+      document.getElementById('download-pdf-btn').addEventListener('click', () => {
         if (guestList.length === 0) {
           alert('No data available to download.');
           return;
@@ -2845,22 +2855,18 @@ img.error::after {
         generatePDF(guestList);
       });
 
-      // Function to generate PDF
       async function generatePDF(data) {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
 
-        // Add title
         doc.setFontSize(16);
         doc.text('Guest List', 10, 10);
 
-        // Add table headers
         const headers = ['#', 'Name', 'Address', 'Phone', 'Attending', 'Guests', 'Message'];
         let y = 20;
         doc.setFontSize(12);
         doc.text(headers.join(' | '), 10, y);
 
-        // Add table rows
         data.forEach((guest, index) => {
           y += 10;
           const row = [
@@ -2869,15 +2875,21 @@ img.error::after {
             guest.address,
             guest.phone,
             guest.attending,
-            guest.guests || '-',
+            guest.guests !== undefined ? guest.guests : '-',
             guest.message || '-',
           ];
           doc.text(row.join(' | '), 10, y);
         });
 
-        // Save the PDF
         doc.save('guest_list.pdf');
       }
+
+      // ==========================
+      // Inisialisasi
+      // ==========================
+      window.onload = () => {
+        initDB();
+      };
     </script>
 </body>
 </html>
