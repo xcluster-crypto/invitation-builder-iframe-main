@@ -2593,7 +2593,7 @@ img.error::after {
     	   <button type="button" class="form-button" id="show-rsvp-form-btn" style="margin-bottom: 10px;">
              <i class="fas fa-plus"></i>
          </button>
-         <button type="button" class="form-button" id="download-pdf-btn" style="margin-bottom: 10px;">
+         <button hidden type="button" class="form-button" id="download-pdf-btn" style="margin-bottom: 10px;">
              <i class="fas fa-download"></i>
          </button>
         </div>
@@ -2731,66 +2731,150 @@ img.error::after {
 </head>
 <body>
  <div class="bg-container"></div>
-  <div class="container">
+      <!-- Bagian atas tombol dan icon -->
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+  	  <!-- Icon close/exit halaman -->
+  	  <a href="#" onclick="window.close(); return false;" title="Close/Exit Page" style="text-decoration: none; font-size: 20px; color: #000;">[X] exit</a>
+   </div>
+ <div class="container">
 
     <h3>Guest List</h3>
     <div class="location" style="text-align: center;">${coupleNames || "Wedding Invitation"}</div>
     <div class="date-time" style="text-align: center;">${formattedDate || "Event Date"} at ${eventTime || "Event Time"}</div>
     <div class="location" style="text-align: center;">${eventLocation || "Event Location"}</div>
 
-          <!-- Bagian atas tombol dan icon -->
-       <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
-  	  <!-- Icon kembali ke home -->
-  	    <a href="#" onclick="window.close(); return false;" title="Tutup Halaman" style="text-decoration: none; font-size: 20px; color: #000;">
-    	    <i class="fas fa-arrow-left"> exit</i>
-  	  </a></div>
-
   <h2>Manage IndexedDB Data</h2>
   <p>Use the buttons below to manage the IndexedDB data for RSVP records.</p>
-
+  <button type="button" class="form-button" id="download-pdf-btn" style="margin-bottom: 10px;">Download Guest List</button>
   <button id="delete-db">Delete Entire Database</button>
   <button id="delete-record">Delete Record by ID</button>
 
   <div id="status"></div>
 
-  <script>
-    const dbName = 'RSVPDatabase';
-    const storeName = 'RSVPStore';
+<script>
+const dbName = 'RSVPDatabase';
+const storeName = 'RSVPStore';
 
-    // Function to delete the entire database
-    function deleteDatabase() {
-      const status = document.getElementById('status');
-      status.textContent = 'Deleting database...';
-      const request = indexedDB.deleteDatabase(dbName);
+let guestList = []; // Variabel global untuk menyimpan data dari IndexedDB
 
-      request.onsuccess = () => {
-        status.textContent = 'Database successfully deleted.';
+// Fungsi untuk ambil data dari IndexedDB dan simpan ke guestList
+function fetchGuestList() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(dbName);
+    request.onsuccess = () => {
+      const db = request.result;
+      const transaction = db.transaction([storeName], 'readonly');
+      const store = transaction.objectStore(storeName);
+      const getAllRequest = store.getAll();
+
+      getAllRequest.onsuccess = () => {
+        guestList = getAllRequest.result;
+        resolve(guestList);
       };
-      request.onerror = () => {
-        status.textContent = 'Failed to delete database.';
+      getAllRequest.onerror = () => {
+        reject('Gagal mengambil data dari IndexedDB.');
       };
-      request.onblocked = () => {
-        status.textContent = 'Deletion blocked. Please close other tabs using this database.';
-      };
+    };
+    request.onerror = () => {
+      reject('Gagal membuka database.');
+    };
+  });
+}
+
+// Function to download guest list PDF
+async function downloadGuestListPDF() {
+  if (guestList.length === 0) {
+    // Jika data kosong, coba fetch dulu
+    try {
+      await fetchGuestList();
+    } catch (err) {
+      alert('Gagal mengambil data: ' + err);
+      return;
     }
+  }
+  
+  if (guestList.length === 0) {
+    alert('Tidak ada data untuk didownload.');
+    return;
+  }
 
-    // Function to delete a specific record by ID
-    function deleteRecordById() {
-      const idToDelete = prompt('Enter the ID of the record to delete:');
-      if (!idToDelete || isNaN(idToDelete)) {
-        alert('Invalid ID. Please enter a numeric value.');
-        return;
-      }
+  generatePDF(guestList);
+}
 
-      const id = parseInt(idToDelete, 10);
-      const status = document.getElementById('status');
-      const request = indexedDB.open(dbName);
+// Fungsi generate PDF
+function generatePDF(data) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
 
-      request.onsuccess = () => {
-        const db = request.result;
-        const transaction = db.transaction([storeName], 'readwrite');
-        const store = transaction.objectStore(storeName);
-        const deleteRequest = store.delete(id);
+  doc.setFontSize(16);
+  doc.text('Guest List', 10, 10);
+
+  const headers = ['#', 'Name', 'Address', 'Phone', 'Attending', 'Guests', 'Message'];
+  let y = 20;
+  doc.setFontSize(12);
+  // Tulis header
+  doc.text(headers.join(' | '), 10, y);
+  y += 10;
+
+  data.forEach((guest, index) => {
+    const row = [
+      index + 1,
+      guest.name || '-',
+      guest.address || '-',
+      guest.phone || '-',
+      guest.attending || '-',
+      guest.guests !== undefined ? guest.guests : '-',
+      guest.message || '-',
+    ];
+    // Pastikan teks tidak terlalu panjang agar tidak keluar halaman
+    // Jika perlu, bisa di-break menjadi beberapa baris
+    doc.text(row.join(' | '), 10, y);
+    y += 10;
+  });
+
+  doc.save('guest_list.pdf');
+}
+
+// Event listener untuk tombol download
+document.getElementById('download-pdf-btn').addEventListener('click', () => {
+  downloadGuestListPDF();
+});
+
+// Fungsi untuk delete database
+function deleteDatabase() {
+  const status = document.getElementById('status');
+  status.textContent = 'Deleting database...';
+  const request = indexedDB.deleteDatabase(dbName);
+
+  request.onsuccess = () => {
+    status.textContent = 'Database successfully deleted.';
+    guestList = []; // Reset data
+  };
+  request.onerror = () => {
+    status.textContent = 'Failed to delete database.';
+  };
+  request.onblocked = () => {
+    status.textContent = 'Deletion blocked. Please close other tabs using this database.';
+  };
+}
+
+// Fungsi untuk delete record by ID
+function deleteRecordById() {
+  const idToDelete = prompt('Enter the ID of the record to delete:');
+  if (!idToDelete || isNaN(idToDelete)) {
+    alert('Invalid ID. Please enter a numeric value.');
+    return;
+  }
+
+  const id = parseInt(idToDelete, 10);
+  const status = document.getElementById('status');
+  const request = indexedDB.open(dbName);
+
+  request.onsuccess = () => {
+    const db = request.result;
+    const transaction = db.transaction([storeName], 'readwrite');
+    const store = transaction.objectStore(storeName);
+    const deleteRequest = store.delete(id);
 
         deleteRequest.onsuccess = () => {
           status.textContent = \`Record with ID \${id} successfully deleted.\`;
@@ -2805,10 +2889,10 @@ img.error::after {
       };
     }
 
-    // Attach event listeners to buttons
-    document.getElementById('delete-db').addEventListener('click', deleteDatabase);
-    document.getElementById('delete-record').addEventListener('click', deleteRecordById);
-  </script>
+// Attach event listeners
+document.getElementById('delete-db').addEventListener('click', deleteDatabase);
+document.getElementById('delete-record').addEventListener('click', deleteRecordById);
+</script>
 </body>
 </html>
   `;
@@ -2909,12 +2993,11 @@ Replace the music.mp3 file with another music file. Make sure the file name rema
 Replace the favicon.png file with another icon. Make sure the file name remains favicon.png.
 
 4. How do I delete database Guest List?
-You can delete the database by opening the /download.html file and clicking the "Delete Database" button. This will remove all RSVP records.
+You can delete the database by opening the ( https://your_server/download.html )file and clicking the "Delete Database" button. This will remove all RSVP records.
 
 
 🛠️ Support
 If you have any issues, please contact the development team or see additional documentation.
-
 Enjoy using your wedding invitation! 🎉
 
 
