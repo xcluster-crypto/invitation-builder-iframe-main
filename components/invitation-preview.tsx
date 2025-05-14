@@ -2585,7 +2585,7 @@ img.error::after {
       <!-- Bagian atas tombol dan icon -->
 	     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
   	    <!-- Icon kembali ke home -->
-  	    <a href="/" title="Kembali ke Home" style="text-decoration: none; font-size: 20px; color: #000;">
+  	    <a href="#" onclick="window.close(); return false;" title="Close/Exit Page" style="text-decoration: none; font-size: 20px; color: #000;">
     	    <i class="fas fa-arrow-left"></i>
   	    </a>
         <!-- Tombol + dan Download di tengah -->
