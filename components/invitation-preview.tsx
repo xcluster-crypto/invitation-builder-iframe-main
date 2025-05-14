@@ -2495,7 +2495,7 @@ img.error::after {
         event.preventDefault(); // Prevent default form submission
 
         const name = document.getElementById('name').value;
-        const address = document.getElementById('alamat').value;
+        const address = document.getElementById('address').value;
         const phone = document.getElementById('phone').value;
         const attending = document.getElementById('attending').value;
         const guests = document.getElementById('guests').value || null;
@@ -2544,7 +2544,7 @@ img.error::after {
   }
 
     // Function to generateGuestHTML file content
-    const generateGuestHTML = (guestList: { name: string; alamat?: string; phone?: string; attending: string; guests?: number; message?: string }[]) => {
+    const generateGuestHTML = (guestList: { name: string; address?: string; phone?: string; attending: string; guests?: number; message?: string }[]) => {
       // Format date for display
       const formattedDate = eventDate
         ? new Date(eventDate).toLocaleDateString("en-US", {
@@ -2574,16 +2574,13 @@ img.error::after {
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
 </head>
 <body>
-  ${safeBackgroundImage ? `<div class="bg-container" style="background-image: url('${safeBackgroundImage}');"></div>` : ""}
+  <div class="bg-container"></div>
   <div class="container">
     <h3>Guest List</h3>
     <div class="location" style="text-align: center;">${coupleNames || "Wedding Invitation"}</div>
     <div class="date-time" style="text-align: center;">${formattedDate || "Event Date"} at ${eventTime || "Event Time"}</div>
     <div class="location" style="text-align: center;">${eventLocation || "Event Location"}</div>
 
-    ${
-      guestList.length > 0
-        ? `
     <div class="section ${enableEffects && enableRgbEffects ? "rgb-border" : ""}">
       <!-- Bagian atas tombol dan icon -->
 	     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
@@ -2614,9 +2611,31 @@ img.error::after {
         </tr>
       </thead>
       <tbody id="guest-list">
-       <!-- Example data, replace with dynamic data from IndexedDB -->
-      </tbody>
-     </table>
+          ${
+            guestList.length > 0
+              ? guestList
+                  .map(
+                    (guest, index) => `
+            <tr>
+              <td>${index + 1}</td>
+              <td>${guest.name || "-"}</td>
+              <td>${guest.address || "-"}</td>
+              <td>${guest.phone || "-"}</td>
+              <td>${guest.attending || "-"}</td>
+              <td>${guest.guests !== undefined ? guest.guests : "-"}</td>
+              <td>${guest.message || "-"}</td>
+            </tr>
+          `
+                  )
+                  .join("")
+              : `
+            <tr>
+              <td colspan="7" style="text-align: center;">No guests have RSVP'd yet.</td>
+            </tr>
+          `
+          }
+        </tbody>
+      </table>
     </div>
     <div id="pagination" style="text-align: center; margin-top: 10px;">
       <!-- Pagination buttons will be dynamically added here -->
@@ -2646,7 +2665,7 @@ img.error::after {
               <option value="No">No</option>
             </select>
           </div>
-          <div id="guests-container" style="display: true;">
+          <div id="guests-container" style="display: block;">
             <label for="guests">Guests:</label>
             <input type="number" id="guests" min="0">
           </div>
@@ -2657,10 +2676,6 @@ img.error::after {
           <button type="submit">Submit RSVP</button>
         </form>
       </div>
-    </div>
-    `
-        : `<p class="empty-message">No guests have RSVP'd yet.</p>`
-    }
     </div>
     <script>
       // ==========================
@@ -2732,7 +2747,7 @@ img.error::after {
             <td>\${guest.guests !== undefined ? guest.guests : '-'}</td>
             <td>\${guest.message || '-'}</td>
           \`;
-          tableBody.appendChild(row);
+          tbody.appendChild(row);
         }
       }
 
