@@ -35,8 +35,8 @@ export function MapSelector() {
             <li>Open <a href="https://maps.google.com" target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">Google Maps</a>.</li>
             <li>Search for the location you want to embed.</li>
             <li>Click the "Share" button and select "Embed a map".</li>
-            <li>Copy the URL from the iframe code (e.g., <code>https://www.google.com/maps/embed?pb=...`</code>).</li>
-            <li>Paste the URL into the input field above.</li>
+            <li>Copy the URL from the iframe code, remove and do not use the &lt;iframe src=" ... and &lt;/iframe&gt; tags, (e.g. <code>https://www.google.com/maps/embed?pb=...`</code>).</li>
+            <li>Paste the URL into the input field above, then edit the size to width="870" height="400".</li>
           </ol>
         </div>
       </div>
