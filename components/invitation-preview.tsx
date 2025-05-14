@@ -3176,7 +3176,28 @@ Created with the Wedding Invitation Builder
           const extension = metadata.split(";")[0].split("/")[1];
           zip.file(`female-photo.${extension}`, base64Data, { base64: true });
         }
-      
+
+        // Add background image if available
+        const effectiveBackgroundImage = getEffectiveBackgroundImage();
+        if (effectiveBackgroundImage && effectiveBackgroundImage.startsWith("data:image")) {
+          const [metadata, base64Data] = effectiveBackgroundImage.split(",");
+          const extension = metadata.split(";")[0].split("/")[1];
+          zip.file(`background-image.${extension}`, base64Data, { base64: true });
+        } else if (effectiveBackgroundImage) {
+          try {
+            const response = await fetch(effectiveBackgroundImage);
+            if (response.ok) {
+              const blob = await response.blob();
+              const extension = effectiveBackgroundImage.split(".").pop();
+              zip.file(`background-image.${extension}`, blob);
+            } else {
+              console.error("Failed to fetch background image.");
+            }
+          } catch (error) {
+            console.error("Error fetching background image:", error);
+          }
+        }
+
         // Add script_guest.js from the public folder
         try {
           const response = await fetch("/script_guest.js");
