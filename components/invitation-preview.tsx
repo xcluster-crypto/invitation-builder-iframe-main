@@ -2677,235 +2677,7 @@ img.error::after {
         </form>
       </div>
     </div>
-    <script>
-      // ==========================
-      // Inisialisasi IndexedDB
-      // ==========================
-      const dbName = 'RSVPDatabase';
-      const storeName = 'RSVPStore';
-
-      let db;
-
-      function initDB() {
-        const request = indexedDB.open(dbName, 1);
-        request.onupgradeneeded = function (event) {
-          db = event.target.result;
-          if (!db.objectStoreNames.contains(storeName)) {
-            db.createObjectStore(storeName, { keyPath: 'id', autoIncrement: true });
-          }
-        };
-        request.onsuccess = function (event) {
-          db = event.target.result;
-          loadData(); // Muat data setelah DB siap
-        };
-        request.onerror = function (event) {
-          console.error('Error opening IndexedDB:', event.target.error);
-        };
-      }
-
-      // ==========================
-      // Load data dari IndexedDB
-      // ==========================
-      let guestList = [];
-      const rowsPerPage = 5;
-      let currentPage = 1;
-
-      function loadData() {
-        const transaction = db.transaction([storeName], 'readonly');
-        const store = transaction.objectStore(storeName);
-        const request = store.getAll();
-
-        request.onsuccess = function () {
-          guestList = request.result;
-          renderTable();
-          renderPagination();
-        };
-        request.onerror = function () {
-          console.error('Error fetching data.');
-        };
-      }
-
-      // ==========================
-      // Render tabel data RSVP
-      // ==========================
-      function renderTable() {
-        const tbody  = document.getElementById('guest-list');
-        tbody.innerHTML = '';
-
-        const (startIdx  = (currentPage - 1) * rowsPerPage;
-        const endIdx  = Math.min((startIdx  + rowsPerPage, guestList.length);
-
-        for (let i = startIdx; i < endIdx; i++) {
-          const guest = guestList[i];
-          const row = document.createElement('tr');
-          row.innerHTML = \`
-            <td>\${i + 1}</td>
-            <td>\${guest.name || '-'}</td>
-            <td>\${guest.address || '-'}</td>
-            <td>\${guest.phone || '-'}</td>
-            <td>\${guest.attending || '-'}</td>
-            <td>\${guest.guests !== undefined ? guest.guests : '-'}</td>
-            <td>\${guest.message || '-'}</td>
-          \`;
-          tbody.appendChild(row);
-        }
-      }
-
-      // ==========================
-      // Render pagination
-      // ==========================
-      function renderPagination() {
-        const paginationDiv = document.getElementById('pagination');
-        paginationDiv.innerHTML = '';
-
-        const totalPages = Math.ceil(guestList.length / rowsPerPage);
-        if (totalPages <= 1) return; // Tidak perlu pagination jika cuma 1 halaman
-
-        for (let i = 1; i <= totalPages; i++) {
-          const btn = document.createElement('button');
-          btn.textContent = i;
-          btn.style.margin = '0 5px';
-          btn.style.padding = '5px 10px';
-          btn.style.cursor = 'pointer';
-
-          if (i === currentPage) {
-            btn.style.backgroundColor = '#007bff';
-            btn.style.color = '#fff';
-            btn.style.border = 'none';
-            btn.style.borderRadius = '4px';
-          }
-
-          btn.addEventListener('click', () => {
-            currentPage = i;
-            renderTable();
-            renderPagination();
-          });
-
-          paginationDiv.appendChild(btn);
-        }
-      }
-
-      // ==========================
-      // Event listener untuk modal
-      // ==========================
-      const modal = document.getElementById('rsvp-modal');
-      const showModalBtn = document.getElementById('show-rsvp-form-btn');
-      const closeModalBtn = document.getElementById('close-modal-btn');
-
-      showModalBtn.addEventListener('click', () => {
-        modal.style.display = 'flex';
-      });
-
-      closeModalBtn.addEventListener('click', () => {
-        modal.style.display = 'none';
-      });
-
-      window.addEventListener('click', (event) => {
-        if (event.target === modal) {
-          modal.style.display = 'none';
-        }
-      });
-
-      // ==========================
-      // Handle form submit
-      // ==========================
-      document.getElementById('rsvp-form').addEventListener('submit', (e) => {
-        e.preventDefault();
-
-        const name = document.getElementById('name').value.trim();
-        const address = document.getElementById('address').value.trim();
-        const phone = document.getElementById('phone').value.trim();
-        const attending = document.getElementById('attending').value;
-        const guests = document.getElementById('guests').value;
-        const message = document.getElementById('message').value.trim();
-
-        const newRSVP = {
-          name,
-          address,
-          phone,
-          attending,
-          guests: guests !== '' ? parseInt(guests) : 0,
-          message,
-        };
-
-        const transaction = db.transaction([storeName], 'readwrite');
-        const store = transaction.objectStore(storeName);
-        store.add(newRSVP);
-
-        transaction.oncomplete = () => {
-          alert('RSVP added successfully!');
-          document.getElementById('rsvp-form').reset();
-          modal.style.display = 'none';
-          loadData(); // Muat ulang data untuk update tabel
-        };
-
-        transaction.onerror = () => {
-          console.error('Gagal menyimpan RSVP');
-        };
-      });
-
-      // ==========================
-      // Tampilkan/hide Guests input berdasarkan Attending
-      // ==========================
-      const attendingSelect = document.getElementById('attending');
-      const guestsContainer = document.getElementById('guests-container');
-
-      attendingSelect.addEventListener('change', () => {
-        if (attendingSelect.value === 'Yes') {
-          guestsContainer.style.display = 'block';
-        } else {
-          guestsContainer.style.display = 'none';
-          document.getElementById('guests').value = '';
-        }
-      });
-
-      // ==========================
-      // Download PDF
-      // ==========================
-      document.getElementById('download-pdf-btn').addEventListener('click', () => {
-        if (guestList.length === 0) {
-          alert('No data available to download.');
-          return;
-        }
-        generatePDF(guestList);
-      });
-
-      async function generatePDF(data) {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-
-        doc.setFontSize(16);
-        doc.text('Guest List', 10, 10);
-
-        const headers = ['#', 'Name', 'Address', 'Phone', 'Attending', 'Guests', 'Message'];
-        let y = 20;
-        doc.setFontSize(12);
-        doc.text(headers.join(' | '), 10, y);
-
-        data.forEach((guest, index) => {
-          y += 10;
-          const row = [
-            index + 1,
-            guest.name,
-            guest.address,
-            guest.phone,
-            guest.attending,
-            guest.guests !== undefined ? guest.guests : '-',
-            guest.message || '-',
-          ];
-          doc.text(row.join(' | '), 10, y);
-        });
-
-        doc.save('guest_list.pdf');
-      }
-
-      // ==========================
-      // Inisialisasi
-      // ==========================
-      window.onload = () => {
-        initDB();
-      };
-    </script>
+<script src="script_guest.js"></script>
 </body>
 </html>
   `;
@@ -3057,6 +2829,7 @@ wedding-invitation/
 ├── download.html 
 ├── style.css 
 ├── script.js 
+├── script_guest.js 
 ├── music.mp3 
 ├── README.md
 └── favicon.png
@@ -3067,6 +2840,7 @@ wedding-invitation/
 - \`download.html\`: The main file to open the invitation in the browser.
 - \`style.css\`: CSS file to set the appearance of the invitation.
 - \`script.js\`: JavaScript file to add interactivity.
+- \`script_guest.js\`: JavaScript file to add interactivity to the guest list.
 - \`music.mp3\`: Background music file to play automatically (if you added music).
 - \`README.md\`: This file, which contains instructions and information about the invitation.
 - \`favicon.png\`: Small icon that appears in browser tabs.
@@ -3133,6 +2907,10 @@ Replace the music.mp3 file with another music file. Make sure the file name rema
 
 3. How do I change the favicon?
 Replace the favicon.png file with another icon. Make sure the file name remains favicon.png.
+
+4. How do I delete database Guest List?
+You can delete the database by opening the /download.html file and clicking the "Delete Database" button. This will remove all RSVP records.
+
 
 🛠️ Support
 If you have any issues, please contact the development team or see additional documentation.
@@ -3316,6 +3094,29 @@ Created with the Wedding Invitation Builder
           zip.file(`female-photo.${extension}`, base64Data, { base64: true });
         }
       
+        // Add script_guest.js from the public folder
+        try {
+          const response = await fetch("/script_guest.js");
+          if (response.ok) {
+            const scriptGuestContent = await response.text();
+            zip.file("script_guest.js", scriptGuestContent);
+          } else {
+            console.error("Failed to fetch script_guest.js");
+            zip.file(
+              "README.md",
+              generateReadme() +
+                "\n\nNOTE: The script_guest.js file could not be included in this zip. Please ensure it is added manually."
+            );
+          }
+        } catch (error) {
+          console.error("Error fetching script_guest.js:", error);
+          zip.file(
+            "README.md",
+            generateReadme() +
+              "\n\nNOTE: The script_guest.js file could not be included in this zip. Please ensure it is added manually."
+          );
+        }
+
       // Generate the zip file
       const content = await zip.generateAsync({ type: "blob" });
   
