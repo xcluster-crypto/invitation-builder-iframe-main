@@ -2418,8 +2418,8 @@ img.error::after {
           </div>
           
           <div class="form-group">
-            <label class="form-label" for="alamat">Address Home</label>
-            <input class="form-input" type="alamat" id="alamat" name="alamat">
+            <label class="form-label" for="address">Address Home</label>
+            <input class="form-input" type="address" id="address" name="address">
           </div>
           
           <div class="form-group">
