@@ -852,6 +852,39 @@ img.error::after {
     font-size: 20px;
     cursor: pointer;
   }
+
+      table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+    th, td {
+      padding: 10px;
+      text-align: left;
+      border: 1px solid #ddd;
+    }
+    th {
+      background-color: #f4f4f4;
+    }
+    .pagination {
+      text-align: center;
+      margin-top: 20px;
+    }
+    .pagination button {
+      margin: 0 5px;
+      padding: 5px 10px;
+      border: none;
+      background-color: #007bff;
+      color: #fff;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .pagination button.active {
+      background-color: #0056b3;
+    }
+    .pagination button:hover {
+      background-color: #0056b3;
+    }
  `
  }
 
@@ -2557,38 +2590,6 @@ img.error::after {
     h3 {
       text-align: center;
       margin-bottom: 20px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 20px;
-    }
-    th, td {
-      padding: 10px;
-      text-align: left;
-      border: 1px solid #ddd;
-    }
-    th {
-      background-color: #f4f4f4;
-    }
-    .pagination {
-      text-align: center;
-      margin-top: 20px;
-    }
-    .pagination button {
-      margin: 0 5px;
-      padding: 5px 10px;
-      border: none;
-      background-color: #007bff;
-      color: #fff;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    .pagination button.active {
-      background-color: #0056b3;
-    }
-    .pagination button:hover {
-      background-color: #0056b3;
     }
   </style>
 </head>
