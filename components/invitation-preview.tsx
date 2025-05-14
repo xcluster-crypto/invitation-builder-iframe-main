@@ -2911,6 +2911,137 @@ img.error::after {
   `;
 };
 
+    // Function to generateDownloadHTML file content
+    const generateDownloadHTML = () => {
+      // Format date for display
+      const formattedDate = eventDate
+        ? new Date(eventDate).toLocaleDateString("en-US", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })
+        : ""
+  
+      // Get the effective background image
+      const effectiveBackgroundImage = getEffectiveBackgroundImage()
+      const safeBackgroundImage = effectiveBackgroundImage ? safeImageUrl(effectiveBackgroundImage) : ""
+  
+  // Generate DownloadHTML content
+  return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hapus Data IndexedDB</title>
+  <link href="https://fonts.googleapis.com/css2?family=Great%2BVibes:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="icon" href="favicon.png" type="image/png">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    margin: 50px;
+  }
+  button {
+    padding: 10px 20px;
+    margin: 10px 0;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  #status {
+    margin-top: 20px;
+    font-weight: bold;
+  }
+</style>
+</head>
+<body>
+ <div class="bg-container"></div>
+  <div class="container">
+
+    <h3>Guest List</h3>
+    <div class="location" style="text-align: center;">${coupleNames || "Wedding Invitation"}</div>
+    <div class="date-time" style="text-align: center;">${formattedDate || "Event Date"} at ${eventTime || "Event Time"}</div>
+    <div class="location" style="text-align: center;">${eventLocation || "Event Location"}</div>
+
+          <!-- Bagian atas tombol dan icon -->
+       <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+  	  <!-- Icon kembali ke home -->
+  	    <a href="#" onclick="window.close(); return false;" title="Tutup Halaman" style="text-decoration: none; font-size: 20px; color: #000;">
+    	    <i class="fas fa-arrow-left"> exit</i>
+  	  </a></div>
+
+  <h2>Manage IndexedDB Data</h2>
+  <p>Use the buttons below to manage the IndexedDB data for RSVP records.</p>
+
+  <button id="delete-db">Delete Entire Database</button>
+  <button id="delete-record">Delete Record by ID</button>
+
+  <div id="status"></div>
+
+  <script>
+    const dbName = 'RSVPDatabase';
+    const storeName = 'RSVPStore';
+
+    // Function to delete the entire database
+    function deleteDatabase() {
+      const status = document.getElementById('status');
+      status.textContent = 'Deleting database...';
+      const request = indexedDB.deleteDatabase(dbName);
+
+      request.onsuccess = () => {
+        status.textContent = 'Database successfully deleted.';
+      };
+      request.onerror = () => {
+        status.textContent = 'Failed to delete database.';
+      };
+      request.onblocked = () => {
+        status.textContent = 'Deletion blocked. Please close other tabs using this database.';
+      };
+    }
+
+    // Function to delete a specific record by ID
+    function deleteRecordById() {
+      const idToDelete = prompt('Enter the ID of the record to delete:');
+      if (!idToDelete || isNaN(idToDelete)) {
+        alert('Invalid ID. Please enter a numeric value.');
+        return;
+      }
+
+      const id = parseInt(idToDelete, 10);
+      const status = document.getElementById('status');
+      const request = indexedDB.open(dbName);
+
+      request.onsuccess = () => {
+        const db = request.result;
+        const transaction = db.transaction([storeName], 'readwrite');
+        const store = transaction.objectStore(storeName);
+        const deleteRequest = store.delete(id);
+
+        deleteRequest.onsuccess = () => {
+          status.textContent = \`Record with ID \${id} successfully deleted.\`;
+        };
+        deleteRequest.onerror = () => {
+          status.textContent = \`Failed to delete record with ID \${id}.\`;
+        };
+      };
+
+      request.onerror = () => {
+        status.textContent = 'Failed to open database.';
+      };
+    }
+
+    // Attach event listeners to buttons
+    document.getElementById('delete-db').addEventListener('click', deleteDatabase);
+    document.getElementById('delete-record').addEventListener('click', deleteRecordById);
+  </script>
+</body>
+</html>
+  `;
+};
+
   // Function to generate README.md content
   const generateReadme = () => {
     return `# Wedding Invitation
