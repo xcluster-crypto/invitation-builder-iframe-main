@@ -3053,7 +3053,8 @@ This is a custom wedding invitation created with the Wedding Invitation Builder.
 After you extract the ZIP file, you will find the following file structure:
 wedding-invitation/ 
 ├── index.html 
-├── guest.html 
+├── guest.html
+├── download.html 
 ├── style.css 
 ├── script.js 
 ├── music.mp3 
@@ -3063,6 +3064,7 @@ wedding-invitation/
 ### File Explanation:
 - \`index.html\`: The main file to open the invitation in the browser.
 - \`guest.html\`: The main file to open the invitation in the browser.
+- \`download.html\`: The main file to open the invitation in the browser.
 - \`style.css\`: CSS file to set the appearance of the invitation.
 - \`script.js\`: JavaScript file to add interactivity.
 - \`music.mp3\`: Background music file to play automatically (if you added music).
@@ -3249,6 +3251,7 @@ Created with the Wedding Invitation Builder
       // zip.file(`${coupleNames}.html`, generateHTML());
       zip.file("index.html", generateIndexHTML());
       zip.file("guest.html", generateGuestHTML([])); // Pass an empty array or the actual guest list
+      zip.file("download.html", generateDownloadHTML());
       zip.file("style.css", generateCSS());
       zip.file("script.js", generateJS());
       zip.file("README.md", generateReadme());
