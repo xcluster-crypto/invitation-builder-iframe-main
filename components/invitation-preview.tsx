@@ -2538,6 +2538,80 @@ img.error::after {
   }
   
   <!-- <script src="script.js"></script> -->
+  <!-- Mobile Navbar -->
+<nav class="mobile-navbar">
+  <ul>
+    <li><a href="#main-image"><i class="fas fa-home"></i><span>Main Image</span></a></li>
+    <li><a href="#wedding-message"><i class="fas fa-heart"></i><span>Wedding Message</span></a></li>
+    <li><a href="#gallery"><i class="fas fa-images"></i><span>Gallery</span></a></li>
+    <li><a href="#location"><i class="fas fa-map-marker-alt"></i><span>Location</span></a></li>
+    <li><a href="#gift"><i class="fas fa-gift"></i><span>Gift</span></a></li>
+    <li><a href="#rsvp"><i class="fas fa-envelope"></i><span>RSVP</span></a></li>
+  </ul>
+</nav>
+
+<style>
+.mobile-navbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100vw;
+  background: #fff;
+  border-top: 1px solid #eee;
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.05);
+}
+.mobile-navbar ul {
+  display: flex;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  justify-content: space-around;
+  list-style: none;
+}
+.mobile-navbar li {
+  flex: 1;
+  text-align: center;
+}
+.mobile-navbar a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 0 4px 0;
+  color: #444;
+  font-size: 13px;
+  text-decoration: none;
+}
+.mobile-navbar i {
+  font-size: 18px;
+  margin-bottom: 2px;
+}
+.mobile-navbar span {
+  font-size: 11px;
+}
+@media (min-width: 768px) {
+  .mobile-navbar { display: none; }
+}
+</style>
+
+<script>
+  // Smooth scroll for navbar links
+  document.querySelectorAll('.mobile-navbar a').forEach(link => {
+    link.addEventListener('click', function(e) {
+      const href = this.getAttribute('href');
+      if (href.startsWith('#')) {
+        e.preventDefault();
+        const target = document.querySelector(href);
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }
+    });
+  });
+</script>
+<!-- ...existing code... -->
 </body>
 </html>
 `
@@ -2677,6 +2751,73 @@ img.error::after {
         </form>
       </div>
     </div>
+    <!-- Mobile Navbar -->
+<nav class="mobile-navbar">
+  <ul>
+    <li><a href="#"><i class="fas fa-home"></i><span>Home</span></a></li>
+    <li><a href="#" id="mobile-add-rsvp"><i class="fas fa-plus"></i><span>Add RSVP</span></a></li>
+    <li><a href="#" id="mobile-back"><i class="fas fa-arrow-left"></i><span>Back</span></a></li>
+  </ul>
+</nav>
+
+<style>
+.mobile-navbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100vw;
+  background: #fff;
+  border-top: 1px solid #eee;
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.05);
+}
+.mobile-navbar ul {
+  display: flex;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  justify-content: space-around;
+  list-style: none;
+}
+.mobile-navbar li {
+  flex: 1;
+  text-align: center;
+}
+.mobile-navbar a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 0 4px 0;
+  color: #444;
+  font-size: 13px;
+  text-decoration: none;
+}
+.mobile-navbar i {
+  font-size: 18px;
+  margin-bottom: 2px;
+}
+.mobile-navbar span {
+  font-size: 11px;
+}
+@media (min-width: 768px) {
+  .mobile-navbar { display: none; }
+}
+</style>
+
+<script>
+  // Mobile navbar actions
+  document.getElementById('mobile-add-rsvp').addEventListener('click', function(e) {
+    e.preventDefault();
+    document.getElementById('show-rsvp-form-btn').click();
+  });
+  document.getElementById('mobile-back').addEventListener('click', function(e) {
+    e.preventDefault();
+    window.close();
+  });
+</script>
+<!-- ...existing code... -->
 <script src="script_guest.js"></script>
 </body>
 </html>
@@ -2750,7 +2891,77 @@ img.error::after {
   <button id="delete-record">Delete Record by ID</button>
 
   <div id="status"></div>
+<!-- Mobile Navbar -->
+<nav class="mobile-navbar">
+  <ul>
+    <li><a href="#" id="mobile-download"><i class="fas fa-download"></i><span>Download Guest List</span></a></li>
+    <li><a href="#" id="mobile-delete-db"><i class="fas fa-database"></i><span>Delete DB</span></a></li>
+    <li><a href="#" id="mobile-delete-record"><i class="fas fa-trash-alt"></i><span>Delete Record</span></a></li>
+  </ul>
+</nav>
 
+<style>
+.mobile-navbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100vw;
+  background: #ffffff;
+  border-top: 1px solid #eee;
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.05);
+}
+.mobile-navbar ul {
+  display: flex;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  justify-content: space-around;
+  list-style: none;
+}
+.mobile-navbar li {
+  flex: 1;
+  text-align: center;
+}
+.mobile-navbar a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 0 4px 0;
+  color: #444;
+  font-size: 13px;
+  text-decoration: none;
+}
+.mobile-navbar i {
+  font-size: 18px;
+  margin-bottom: 2px;
+}
+.mobile-navbar span {
+  font-size: 11px;
+}
+@media (min-width: 768px) {
+  .mobile-navbar { display: none; }
+}
+</style>
+
+<script>
+  // Mobile navbar actions
+  document.getElementById('mobile-download').addEventListener('click', function(e) {
+    e.preventDefault();
+    document.getElementById('download-pdf-btn').click();
+  });
+  document.getElementById('mobile-delete-db').addEventListener('click', function(e) {
+    e.preventDefault();
+    document.getElementById('delete-db').click();
+  });
+  document.getElementById('mobile-delete-record').addEventListener('click', function(e) {
+    e.preventDefault();
+    document.getElementById('delete-record').click();
+  });
+</script>
+<!-- ...existing code... -->  
 <script>
 const dbName = 'RSVPDatabase';
 const storeName = 'RSVPStore';
