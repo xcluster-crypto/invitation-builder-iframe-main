@@ -2224,7 +2224,7 @@ img.error::after {
     ${
       mainImage
         ? `
-    <div class="main-image-container">
+    <div class="main-image-container" id="main-image">
       <div class="main-image">
         <div class="main-image-frame photo-border">
           <img src="main-image.${mainImage.split(";")[0].split("/")[1]}" alt="Main Wedding Photo" />
@@ -2279,7 +2279,7 @@ img.error::after {
         : ""
     }
     
-    <div class="section ${enableEffects && enableRgbEffects ? "rgb-border" : ""}">
+    <div class="section ${enableEffects && enableRgbEffects ? "rgb-border" : ""} id="wedding-message">
       ${
         // Legacy wedding message
         showMessage && message
@@ -2336,7 +2336,7 @@ img.error::after {
     ${
       galleryImages && galleryImages.length > 0
         ? `
-    <div class="section ${enableEffects && enableRgbEffects ? "rgb-border" : ""}">
+    <div class="section ${enableEffects && enableRgbEffects ? "rgb-border" : ""} id="gallery">
       <h2 class="section-title">Our Gallery</h2>
       <div class="gallery">
         ${galleryImages
@@ -2357,7 +2357,7 @@ img.error::after {
     ${
       mapLocation
         ? `
-    <div class="section">
+    <div class="section" id="location">
       <h2 class="section-title">Location</h2>
       <div class="map-container">
         <iframe
@@ -2378,7 +2378,7 @@ img.error::after {
     ${
       enableDigitalGifts && giftAccounts.length > 0
         ? `
-    <div class="section ${enableEffects && enableRgbEffects ? "rgb-border" : ""}">
+    <div class="section ${enableEffects && enableRgbEffects ? "rgb-border" : ""} id="gift">
       <h2 class="section-title">Digital Gifts</h2>
       <p>Your presence is the greatest gift. However, if you wish to honor us with a gift, we've provided the following options:</p>
       
@@ -2405,7 +2405,7 @@ img.error::after {
     ${
       enableRSVP
         ? `
-    <div class="section ${enableEffects && enableRgbEffects ? "rgb-border" : ""}">
+    <div class="section ${enableEffects && enableRgbEffects ? "rgb-border" : ""} id="rsvp">
       <h2 class="section-title">RSVP</h2>
       <p>${rsvpMessage}</p>
       ${rsvpDeadline ? `<p class="text-muted-foreground">Please respond by ${formattedRsvpDeadline}</p>` : ""}
