@@ -2541,8 +2541,8 @@ img.error::after {
   <!-- Mobile Navbar -->
 <nav class="mobile-navbar">
   <ul>
-    <li><a href="#main-image"><i class="fas fa-home"></i><span>Main Image</span></a></li>
-    <li><a href="#wedding-message"><i class="fas fa-heart"></i><span>Wedding Message</span></a></li>
+    <li><a href="#main-image"><i class="fas fa-home"></i><span>Home</span></a></li>
+    <li><a href="#wedding-message"><i class="fas fa-heart"></i><span>Message</span></a></li>
     <li><a href="#gallery"><i class="fas fa-images"></i><span>Gallery</span></a></li>
     <li><a href="#location"><i class="fas fa-map-marker-alt"></i><span>Location</span></a></li>
     <li><a href="#gift"><i class="fas fa-gift"></i><span>Gift</span></a></li>
