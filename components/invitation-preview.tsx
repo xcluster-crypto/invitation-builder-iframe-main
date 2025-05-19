@@ -419,7 +419,7 @@ ${
 /* Music player styles */
 .music-player {
   position: fixed;
-  bottom: 20px;
+  bottom: 60px;
   right: 20px;
   z-index: 100;
   background-color: rgba(255, 255, 255, 0.8);
